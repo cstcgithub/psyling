@@ -1,0 +1,50 @@
+---
+title: "Preprocessing_Two"
+author: "Christopher"
+date: "2026-02-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This code loads the required datasets and packages:
+
+```{r cars}
+library(readxl)
+
+no_stop_df <- read.csv("words_clean.csv")
+df_fam <- read_excel("data/Conde_fam.xlsx")
+df_other <- read_excel("data/Conde_other.xlsx")
+```
+
+This code removes numbers from the dataframe:
+
+```{r, echo=FALSE}
+#This removes the rows which contain numbers:
+df_a <- no_stop_df[-c(19, 45, 187, 259, 457, 622, 863), ] #"1960er" habe ich dringelassen."
+```
+
+```{r, echo=FALSE}
+# This joins the familiarity ratings from Conde to the words.
+df_b <- df_a %>% left_join(df_fam, by = c("duplication" = "Word"))
+
+# This removes unncessary columns.
+df_c <- df_b %>% select(duplication, GPT_FAM, GPT_FAM_ft, Multilex)
+df_other <- df_other %>% select(Word, GPT_concr, GPT_arou, GPT_val, GPT_AoA_ft)
+
+# this joins the other ratings to the df.
+df_d <- df_c %>% left_join(df_other, by = c("duplication" = "Word"))
+
+# This picks out the words for which there are no familiairty ratings (df_fam_NA) or other ratings (df_other_NA):
+df_fam_NA <- df_d %>% filter(is.na(GPT_FAM)) %>% select(duplication)
+df_other_NA <- df_d %>% filter(is.na(GPT_val)) %>% select(duplication)
+
+# This writes a csv file for each scenarios:
+# Based on these csv dataframes i can generate new GPT estimates.
+write_csv(df_fam_NA, "word_datasets/df_fam_NA.csv")
+write_csv(df_other_NA, "word_datasets/df_other_NA.csv")
+```
+
+
